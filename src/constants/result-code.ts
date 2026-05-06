@@ -1,0 +1,10 @@
+export const ResultCode = {
+  SUCCESS: 200,
+  FAIL: 500,
+  PARAM_ERROR: 400,
+  UNAUTHORIZED: 401,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  SYSTEM_ERROR: 500,
+  BUSINESS_ERROR: 501
+} as const
