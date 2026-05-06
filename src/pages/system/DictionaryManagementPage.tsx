@@ -1,5 +1,5 @@
 import { Pencil, Plus, RefreshCw, Save, Search, Trash2 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import {
   createDictionaryItem,
   createDictionaryType,
@@ -17,6 +17,26 @@ import Modal from '@/components/Modal'
 import PageHeader from '@/components/PageHeader'
 import Pagination from '@/components/Pagination'
 import StatusBadge from '@/components/StatusBadge'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table'
 import type { IdValue, PageResult } from '@/types/common'
 import type { DictionaryItem, DictionaryType } from '@/types/dictionary'
 
@@ -35,6 +55,8 @@ const emptyItemForm: DictionaryItemSaveRequest = {
   status: 1,
   remark: ''
 }
+
+const ALL_STATUS_VALUE = '__all_status__'
 
 export default function DictionaryManagementPage() {
   const [query, setQuery] = useState({ pageNo: 1, pageSize: 10, dictCode: '', dictName: '', module: '', status: '' as number | '' })
@@ -210,291 +232,381 @@ export default function DictionaryManagementPage() {
     }
   }
 
-  function submitSearch(event: React.FormEvent<HTMLFormElement>) {
+  function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const nextQuery = { ...query, pageNo: 1 }
     setQuery(nextQuery)
     void fetchTypes(nextQuery)
   }
 
+  function resetSearch() {
+    const nextQuery = { pageNo: 1, pageSize: 10, dictCode: '', dictName: '', module: '', status: '' as number | '' }
+    setQuery(nextQuery)
+    void fetchTypes(nextQuery)
+  }
+
   return (
-    <div className="page-stack">
+    <div className="space-y-5">
       <PageHeader
         title="字典管理"
         description="维护系统字典类型和字典项。"
         actions={
-          <button className="btn primary" type="button" onClick={openCreateType}>
-            <Plus size={18} />
+          <Button type="button" onClick={openCreateType}>
+            <Plus />
             新建字典
-          </button>
+          </Button>
         }
       />
-      <form className="toolbar" onSubmit={submitSearch}>
-        <input
-          placeholder="字典编码"
-          value={query.dictCode}
-          onChange={(event) => setQuery((current) => ({ ...current, dictCode: event.target.value }))}
-        />
-        <input
-          placeholder="字典名称"
-          value={query.dictName}
-          onChange={(event) => setQuery((current) => ({ ...current, dictName: event.target.value }))}
-        />
-        <input
-          placeholder="模块"
-          value={query.module}
-          onChange={(event) => setQuery((current) => ({ ...current, module: event.target.value }))}
-        />
-        <select
-          value={query.status}
-          onChange={(event) =>
-            setQuery((current) => ({ ...current, status: event.target.value === '' ? '' : Number(event.target.value), pageNo: 1 }))
-          }
-        >
-          <option value="">全部状态</option>
-          <option value={1}>启用</option>
-          <option value={0}>停用</option>
-        </select>
-        <button className="btn primary" type="submit">
-          <Search size={18} />
-          查询
-        </button>
-        <button
-          className="btn ghost"
-          type="button"
-          onClick={() => {
-            const nextQuery = { pageNo: 1, pageSize: 10, dictCode: '', dictName: '', module: '', status: '' as number | '' }
-            setQuery(nextQuery)
-            void fetchTypes(nextQuery)
-          }}
-        >
-          <RefreshCw size={18} />
-          重置
-        </button>
-      </form>
-      {error ? <div className="notice error">{error}</div> : null}
-      <div className="dictionary-grid">
-        <section className="table-panel">
-          <div className="section-title">字典类型</div>
-          <div className="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>编码</th>
-                  <th>名称</th>
-                  <th>模块</th>
-                  <th>状态</th>
-                  <th className="actions-col">操作</th>
-                </tr>
-              </thead>
-              <tbody>
+
+      <Card className="border-blue-100/80 bg-card/95 shadow-sm">
+        <CardContent className="p-4">
+          <form className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_160px_180px_auto]" onSubmit={submitSearch}>
+            <div className="space-y-2">
+              <Label htmlFor="dict-search-code">字典编码</Label>
+              <Input
+                id="dict-search-code"
+                placeholder="请输入字典编码"
+                value={query.dictCode}
+                onChange={(event) => setQuery((current) => ({ ...current, dictCode: event.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="dict-search-name">字典名称</Label>
+              <Input
+                id="dict-search-name"
+                placeholder="请输入字典名称"
+                value={query.dictName}
+                onChange={(event) => setQuery((current) => ({ ...current, dictName: event.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="dict-search-module">模块</Label>
+              <Input
+                id="dict-search-module"
+                placeholder="system"
+                value={query.module}
+                onChange={(event) => setQuery((current) => ({ ...current, module: event.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>状态</Label>
+              <Select
+                value={query.status === '' ? ALL_STATUS_VALUE : String(query.status)}
+                onValueChange={(value) =>
+                  setQuery((current) => ({
+                    ...current,
+                    status: value === ALL_STATUS_VALUE ? '' : Number(value),
+                    pageNo: 1
+                  }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="全部状态" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL_STATUS_VALUE}>全部状态</SelectItem>
+                  <SelectItem value="1">启用</SelectItem>
+                  <SelectItem value="0">停用</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-end gap-2 md:col-span-2 xl:col-span-1">
+              <Button className="flex-1 xl:flex-none" type="submit">
+                <Search />
+                查询
+              </Button>
+              <Button className="flex-1 xl:flex-none" variant="outline" type="button" onClick={resetSearch}>
+                <RefreshCw />
+                重置
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      {error ? <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</div> : null}
+
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+        <Card className="overflow-hidden border-blue-100/80 bg-card/95 shadow-sm">
+          <CardHeader className="flex-row items-center justify-between space-y-0 border-b bg-slate-50/70">
+            <CardTitle className="text-base">字典类型</CardTitle>
+            <Badge variant="outline" className="bg-background text-muted-foreground">
+              {page.total} 条
+            </Badge>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader className="bg-slate-50/90">
+                <TableRow className="hover:bg-slate-50/90">
+                  <TableHead className="min-w-36">编码</TableHead>
+                  <TableHead>名称</TableHead>
+                  <TableHead className="w-28">模块</TableHead>
+                  <TableHead className="w-24">状态</TableHead>
+                  <TableHead className="w-28 text-right">操作</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {page.records.map((type) => (
-                  <tr
+                  <TableRow
                     key={String(type.id)}
-                    className={selectedType?.id === type.id ? 'selected-row' : ''}
+                    className={selectedType?.id === type.id ? 'cursor-pointer bg-blue-50/70 hover:bg-blue-50' : 'cursor-pointer'}
                     onClick={() => setSelectedType(type)}
                   >
-                    <td>
-                      <strong>{type.dictCode}</strong>
-                    </td>
-                    <td>{type.dictName}</td>
-                    <td>{type.module}</td>
-                    <td>
+                    <TableCell>
+                      <span className="font-medium text-foreground">{type.dictCode}</span>
+                    </TableCell>
+                    <TableCell>{type.dictName}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="bg-slate-50 text-muted-foreground">
+                        {type.module}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
                       <StatusBadge status={type.status} />
-                    </td>
-                    <td>
-                      <div className="row-actions">
-                        <button
-                          className="icon-btn"
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           type="button"
                           title="编辑字典"
+                          aria-label="编辑字典"
                           onClick={(event) => {
                             event.stopPropagation()
                             openEditType(type)
                           }}
                         >
-                          <Pencil size={17} />
-                        </button>
-                        <button
-                          className="icon-btn danger"
+                          <Pencil />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           type="button"
                           title="删除字典"
+                          aria-label="删除字典"
+                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                           onClick={(event) => {
                             event.stopPropagation()
                             void deleteType(type)
                           }}
                         >
-                          <Trash2 size={17} />
-                        </button>
+                          <Trash2 />
+                        </Button>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
             {!loading && page.records.length === 0 ? <EmptyState /> : null}
-            {loading ? <div className="table-loading">加载中...</div> : null}
-          </div>
-          <Pagination
-            pageNo={page.pageNo}
-            pageSize={page.pageSize}
-            total={page.total}
-            onChange={(pageNo) => setQuery((current) => ({ ...current, pageNo }))}
-          />
-        </section>
-        <section className="table-panel">
-          <div className="section-title">
-            <span>{selectedType ? `${selectedType.dictName} 的字典项` : '字典项'}</span>
-            <button className="btn primary small" type="button" disabled={!selectedType} onClick={openCreateItem}>
-              <Plus size={16} />
+            {loading ? <div className="border-t px-6 py-10 text-center text-sm text-muted-foreground">加载中...</div> : null}
+            <Pagination
+              pageNo={page.pageNo}
+              pageSize={page.pageSize}
+              total={page.total}
+              onChange={(pageNo) => setQuery((current) => ({ ...current, pageNo }))}
+            />
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-blue-100/80 bg-card/95 shadow-sm">
+          <CardHeader className="flex-row items-center justify-between space-y-0 border-b bg-slate-50/70">
+            <div>
+              <CardTitle className="text-base">{selectedType ? `${selectedType.dictName} 的字典项` : '字典项'}</CardTitle>
+              {selectedType ? <p className="mt-1 text-xs text-muted-foreground">{selectedType.dictCode}</p> : null}
+            </div>
+            <Button size="sm" type="button" disabled={!selectedType} onClick={openCreateItem}>
+              <Plus />
               新建项
-            </button>
-          </div>
-          <div className="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>值</th>
-                  <th>标签</th>
-                  <th>排序</th>
-                  <th>状态</th>
-                  <th className="actions-col">操作</th>
-                </tr>
-              </thead>
-              <tbody>
+            </Button>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader className="bg-slate-50/90">
+                <TableRow className="hover:bg-slate-50/90">
+                  <TableHead className="min-w-32">值</TableHead>
+                  <TableHead>标签</TableHead>
+                  <TableHead className="w-20">排序</TableHead>
+                  <TableHead className="w-24">状态</TableHead>
+                  <TableHead className="w-28 text-right">操作</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {items.map((item) => (
-                  <tr key={`${item.dictCode}-${item.value}`}>
-                    <td>
-                      <strong>{item.value}</strong>
-                    </td>
-                    <td>{item.label}</td>
-                    <td>{item.sortOrder ?? 0}</td>
-                    <td>
+                  <TableRow key={`${item.dictCode}-${item.value}`}>
+                    <TableCell>
+                      <span className="font-medium text-foreground">{item.value}</span>
+                    </TableCell>
+                    <TableCell>{item.label}</TableCell>
+                    <TableCell className="text-muted-foreground">{item.sortOrder ?? 0}</TableCell>
+                    <TableCell>
                       <StatusBadge status={item.status ?? 1} />
-                    </td>
-                    <td>
-                      <div className="row-actions">
-                        <button className="icon-btn" type="button" title="编辑字典项" onClick={() => openEditItem(item)}>
-                          <Pencil size={17} />
-                        </button>
-                        <button className="icon-btn danger" type="button" title="删除字典项" onClick={() => deleteItem(item)}>
-                          <Trash2 size={17} />
-                        </button>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button variant="ghost" size="icon" type="button" title="编辑字典项" aria-label="编辑字典项" onClick={() => openEditItem(item)}>
+                          <Pencil />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          type="button"
+                          title="删除字典项"
+                          aria-label="删除字典项"
+                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => deleteItem(item)}
+                        >
+                          <Trash2 />
+                        </Button>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
             {!itemLoading && items.length === 0 ? <EmptyState text={selectedType ? '暂无字典项' : '请选择字典类型'} /> : null}
-            {itemLoading ? <div className="table-loading">加载中...</div> : null}
-          </div>
-        </section>
+            {itemLoading ? <div className="border-t px-6 py-10 text-center text-sm text-muted-foreground">加载中...</div> : null}
+          </CardContent>
+        </Card>
       </div>
+
       <Modal
         title={editingTypeId ? '编辑字典' : '新建字典'}
         open={typeModalOpen}
         onClose={() => setTypeModalOpen(false)}
         footer={
           <>
-            <button className="btn ghost" type="button" onClick={() => setTypeModalOpen(false)}>
+            <Button variant="outline" type="button" onClick={() => setTypeModalOpen(false)}>
               取消
-            </button>
-            <button
-              className="btn primary"
+            </Button>
+            <Button
               type="button"
               disabled={saving || !typeForm.dictCode || !typeForm.dictName || !typeForm.module}
               onClick={saveType}
             >
-              <Save size={18} />
-              保存
-            </button>
+              <Save />
+              {saving ? '保存中...' : '保存'}
+            </Button>
           </>
         }
       >
-        <div className="form-grid two">
-          <label className="field">
-            <span>字典编码</span>
-            <input
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="dict-type-code">字典编码</Label>
+            <Input
+              id="dict-type-code"
               value={typeForm.dictCode}
               disabled={!!editingTypeId}
               onChange={(event) => setTypeForm((current) => ({ ...current, dictCode: event.target.value }))}
             />
-          </label>
-          <label className="field">
-            <span>字典名称</span>
-            <input value={typeForm.dictName} onChange={(event) => setTypeForm((current) => ({ ...current, dictName: event.target.value }))} />
-          </label>
-          <label className="field">
-            <span>模块</span>
-            <input value={typeForm.module} onChange={(event) => setTypeForm((current) => ({ ...current, module: event.target.value }))} />
-          </label>
-          <label className="field">
-            <span>状态</span>
-            <select value={typeForm.status} onChange={(event) => setTypeForm((current) => ({ ...current, status: Number(event.target.value) }))}>
-              <option value={1}>启用</option>
-              <option value={0}>停用</option>
-            </select>
-          </label>
-          <label className="field two-span">
-            <span>备注</span>
-            <input value={typeForm.remark || ''} onChange={(event) => setTypeForm((current) => ({ ...current, remark: event.target.value }))} />
-          </label>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="dict-type-name">字典名称</Label>
+            <Input
+              id="dict-type-name"
+              value={typeForm.dictName}
+              onChange={(event) => setTypeForm((current) => ({ ...current, dictName: event.target.value }))}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="dict-type-module">模块</Label>
+            <Input
+              id="dict-type-module"
+              value={typeForm.module}
+              onChange={(event) => setTypeForm((current) => ({ ...current, module: event.target.value }))}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>状态</Label>
+            <Select value={String(typeForm.status)} onValueChange={(value) => setTypeForm((current) => ({ ...current, status: Number(value) }))}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">启用</SelectItem>
+                <SelectItem value="0">停用</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="dict-type-remark">备注</Label>
+            <Input
+              id="dict-type-remark"
+              value={typeForm.remark || ''}
+              onChange={(event) => setTypeForm((current) => ({ ...current, remark: event.target.value }))}
+            />
+          </div>
         </div>
       </Modal>
+
       <Modal
         title={editingItemId ? '编辑字典项' : '新建字典项'}
         open={itemModalOpen}
         onClose={() => setItemModalOpen(false)}
         footer={
           <>
-            <button className="btn ghost" type="button" onClick={() => setItemModalOpen(false)}>
+            <Button variant="outline" type="button" onClick={() => setItemModalOpen(false)}>
               取消
-            </button>
-            <button
-              className="btn primary"
+            </Button>
+            <Button
               type="button"
               disabled={saving || !itemForm.itemValue || !itemForm.itemLabel}
               onClick={saveItem}
             >
-              <Save size={18} />
-              保存
-            </button>
+              <Save />
+              {saving ? '保存中...' : '保存'}
+            </Button>
           </>
         }
       >
-        <div className="form-grid two">
-          <label className="field">
-            <span>值</span>
-            <input
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="dict-item-value">值</Label>
+            <Input
+              id="dict-item-value"
               value={itemForm.itemValue}
               disabled={!!editingItemId}
               onChange={(event) => setItemForm((current) => ({ ...current, itemValue: event.target.value }))}
             />
-          </label>
-          <label className="field">
-            <span>标签</span>
-            <input value={itemForm.itemLabel} onChange={(event) => setItemForm((current) => ({ ...current, itemLabel: event.target.value }))} />
-          </label>
-          <label className="field">
-            <span>排序</span>
-            <input
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="dict-item-label">标签</Label>
+            <Input
+              id="dict-item-label"
+              value={itemForm.itemLabel}
+              onChange={(event) => setItemForm((current) => ({ ...current, itemLabel: event.target.value }))}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="dict-item-sort">排序</Label>
+            <Input
+              id="dict-item-sort"
               type="number"
               value={itemForm.sortOrder}
               onChange={(event) => setItemForm((current) => ({ ...current, sortOrder: Number(event.target.value) }))}
             />
-          </label>
-          <label className="field">
-            <span>状态</span>
-            <select value={itemForm.status} onChange={(event) => setItemForm((current) => ({ ...current, status: Number(event.target.value) }))}>
-              <option value={1}>启用</option>
-              <option value={0}>停用</option>
-            </select>
-          </label>
-          <label className="field two-span">
-            <span>备注</span>
-            <input value={itemForm.remark || ''} onChange={(event) => setItemForm((current) => ({ ...current, remark: event.target.value }))} />
-          </label>
+          </div>
+          <div className="space-y-2">
+            <Label>状态</Label>
+            <Select value={String(itemForm.status)} onValueChange={(value) => setItemForm((current) => ({ ...current, status: Number(value) }))}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">启用</SelectItem>
+                <SelectItem value="0">停用</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="dict-item-remark">备注</Label>
+            <Input
+              id="dict-item-remark"
+              value={itemForm.remark || ''}
+              onChange={(event) => setItemForm((current) => ({ ...current, remark: event.target.value }))}
+            />
+          </div>
         </div>
       </Modal>
     </div>

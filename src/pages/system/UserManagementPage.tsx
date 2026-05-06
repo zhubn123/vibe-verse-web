@@ -1,5 +1,5 @@
 import { Pencil, RefreshCw, Save, Search } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { queryRoleOptionsApi, type RoleOption } from '@/api/role'
 import {
   queryUserPage,
@@ -13,6 +13,26 @@ import Modal from '@/components/Modal'
 import PageHeader from '@/components/PageHeader'
 import Pagination from '@/components/Pagination'
 import StatusBadge from '@/components/StatusBadge'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table'
 import type { PageResult } from '@/types/common'
 
 interface UserEditForm extends ManagedUserUpdateRequest {}
@@ -25,6 +45,9 @@ const defaultQuery: UserManagementQuery = {
   roleKey: '',
   status: ''
 }
+
+const ALL_ROLES_VALUE = '__all_roles__'
+const ALL_STATUS_VALUE = '__all_status__'
 
 export default function UserManagementPage() {
   const [query, setQuery] = useState<UserManagementQuery>(defaultQuery)
@@ -105,7 +128,7 @@ export default function UserManagementPage() {
     }
   }
 
-  function submitSearch(event: React.FormEvent<HTMLFormElement>) {
+  function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const nextQuery = { ...query, pageNo: 1 }
     setQuery(nextQuery)
@@ -118,153 +141,218 @@ export default function UserManagementPage() {
   }
 
   return (
-    <div className="page-stack">
+    <div className="space-y-5">
       <PageHeader title="用户管理" description="维护系统用户的基础资料、状态和角色归属。" />
-      <form className="toolbar" onSubmit={submitSearch}>
-        <input
-          placeholder="用户名"
-          value={query.username}
-          onChange={(event) => setQuery((current) => ({ ...current, username: event.target.value }))}
-        />
-        <input
-          placeholder="昵称"
-          value={query.nickname}
-          onChange={(event) => setQuery((current) => ({ ...current, nickname: event.target.value }))}
-        />
-        <select
-          value={query.roleKey}
-          onChange={(event) => setQuery((current) => ({ ...current, roleKey: event.target.value, pageNo: 1 }))}
-        >
-          <option value="">全部角色</option>
-          {roleOptions.map((role) => (
-            <option key={role.roleKey} value={role.roleKey}>
-              {role.roleName}
-            </option>
-          ))}
-        </select>
-        <select
-          value={query.status}
-          onChange={(event) =>
-            setQuery((current) => ({
-              ...current,
-              status: event.target.value === '' ? '' : Number(event.target.value),
-              pageNo: 1
-            }))
-          }
-        >
-          <option value="">全部状态</option>
-          <option value={1}>启用</option>
-          <option value={0}>停用</option>
-        </select>
-        <button className="btn primary" type="submit">
-          <Search size={18} />
-          查询
-        </button>
-        <button className="btn ghost" type="button" onClick={resetSearch}>
-          <RefreshCw size={18} />
-          重置
-        </button>
-      </form>
-      {error ? <div className="notice error">{error}</div> : null}
-      <section className="table-panel">
-        <div className="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>用户名</th>
-                <th>昵称</th>
-                <th>联系方式</th>
-                <th>角色</th>
-                <th>状态</th>
-                <th>最后登录</th>
-                <th className="actions-col">操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {page.records.map((user) => (
-                <tr key={String(user.id)}>
-                  <td>
-                    <strong>{user.username}</strong>
-                    {user.immutable ? <span className="mini-tag">内置</span> : null}
-                  </td>
-                  <td>{user.nickname || '-'}</td>
-                  <td>
-                    <div>{user.email || '-'}</div>
-                    <small>{user.phone || ''}</small>
-                  </td>
-                  <td>{user.roles.length ? user.roles.join(', ') : '-'}</td>
-                  <td>
-                    <StatusBadge status={user.status} />
-                  </td>
-                  <td>{user.lastLoginTime || '-'}</td>
-                  <td>
-                    <button className="icon-btn" type="button" title="编辑用户" onClick={() => openEdit(user)}>
-                      <Pencil size={17} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {!loading && page.records.length === 0 ? <EmptyState /> : null}
-          {loading ? <div className="table-loading">加载中...</div> : null}
-        </div>
+
+      <Card className="border-blue-100/80 bg-card/95 shadow-sm">
+        <CardContent className="p-4">
+          <form className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_220px_180px_auto]" onSubmit={submitSearch}>
+            <div className="space-y-2">
+              <Label htmlFor="user-search-username">用户名</Label>
+              <Input
+                id="user-search-username"
+                placeholder="请输入用户名"
+                value={query.username}
+                onChange={(event) => setQuery((current) => ({ ...current, username: event.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="user-search-nickname">昵称</Label>
+              <Input
+                id="user-search-nickname"
+                placeholder="请输入昵称"
+                value={query.nickname}
+                onChange={(event) => setQuery((current) => ({ ...current, nickname: event.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>角色</Label>
+              <Select
+                value={query.roleKey || ALL_ROLES_VALUE}
+                onValueChange={(value) =>
+                  setQuery((current) => ({ ...current, roleKey: value === ALL_ROLES_VALUE ? '' : value, pageNo: 1 }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="全部角色" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL_ROLES_VALUE}>全部角色</SelectItem>
+                  {roleOptions.map((role) => (
+                    <SelectItem key={role.roleKey} value={role.roleKey}>
+                      {role.roleName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>状态</Label>
+              <Select
+                value={query.status === '' ? ALL_STATUS_VALUE : String(query.status)}
+                onValueChange={(value) =>
+                  setQuery((current) => ({
+                    ...current,
+                    status: value === ALL_STATUS_VALUE ? '' : Number(value),
+                    pageNo: 1
+                  }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="全部状态" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL_STATUS_VALUE}>全部状态</SelectItem>
+                  <SelectItem value="1">启用</SelectItem>
+                  <SelectItem value="0">停用</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-end gap-2 md:col-span-2 xl:col-span-1">
+              <Button className="flex-1 xl:flex-none" type="submit">
+                <Search />
+                查询
+              </Button>
+              <Button className="flex-1 xl:flex-none" variant="outline" type="button" onClick={resetSearch}>
+                <RefreshCw />
+                重置
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      {error ? <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</div> : null}
+
+      <Card className="overflow-hidden border-blue-100/80 bg-card/95 shadow-sm">
+        <Table>
+          <TableHeader className="bg-slate-50/90">
+            <TableRow className="hover:bg-slate-50/90">
+              <TableHead className="min-w-40">用户名</TableHead>
+              <TableHead>昵称</TableHead>
+              <TableHead className="min-w-48">联系方式</TableHead>
+              <TableHead className="min-w-48">角色</TableHead>
+              <TableHead className="w-24">状态</TableHead>
+              <TableHead className="min-w-40">最后登录</TableHead>
+              <TableHead className="w-24 text-right">操作</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {page.records.map((user) => (
+              <TableRow key={String(user.id)}>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-foreground">{user.username}</span>
+                    {user.immutable ? <Badge variant="secondary">内置</Badge> : null}
+                  </div>
+                </TableCell>
+                <TableCell className="text-muted-foreground">{user.nickname || '-'}</TableCell>
+                <TableCell>
+                  <div className="space-y-1">
+                    <div className="text-foreground">{user.email || '-'}</div>
+                    {user.phone ? <div className="text-xs text-muted-foreground">{user.phone}</div> : null}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {user.roles.length ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {user.roles.map((role) => (
+                        <Badge key={role} variant="outline" className="border-blue-100 bg-blue-50/60 text-blue-700">
+                          {role}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground">-</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <StatusBadge status={user.status} />
+                </TableCell>
+                <TableCell className="text-muted-foreground">{user.lastLoginTime || '-'}</TableCell>
+                <TableCell className="text-right">
+                  <Button variant="ghost" size="icon" type="button" title="编辑用户" aria-label="编辑用户" onClick={() => openEdit(user)}>
+                    <Pencil />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        {!loading && page.records.length === 0 ? <EmptyState /> : null}
+        {loading ? <div className="border-t px-6 py-10 text-center text-sm text-muted-foreground">加载中...</div> : null}
         <Pagination
           pageNo={page.pageNo}
           pageSize={page.pageSize}
           total={page.total}
           onChange={(pageNo) => setQuery((current) => ({ ...current, pageNo }))}
         />
-      </section>
+      </Card>
+
       <Modal
         title={selectedUser ? `编辑用户：${selectedUser.username}` : '编辑用户'}
         open={!!selectedUser}
         onClose={() => setSelectedUser(null)}
         footer={
           <>
-            <button className="btn ghost" type="button" onClick={() => setSelectedUser(null)}>
+            <Button variant="outline" type="button" onClick={() => setSelectedUser(null)}>
               取消
-            </button>
-            <button className="btn primary" type="button" disabled={saving} onClick={saveUser}>
-              <Save size={18} />
-              保存
-            </button>
+            </Button>
+            <Button type="button" disabled={saving} onClick={saveUser}>
+              <Save />
+              {saving ? '保存中...' : '保存'}
+            </Button>
           </>
         }
       >
-        <div className="form-grid two">
-          <label className="field">
-            <span>昵称</span>
-            <input value={editForm.nickname} onChange={(event) => updateEditField('nickname', event.target.value)} />
-          </label>
-          <label className="field">
-            <span>邮箱</span>
-            <input value={editForm.email} onChange={(event) => updateEditField('email', event.target.value)} />
-          </label>
-          <label className="field">
-            <span>手机</span>
-            <input value={editForm.phone} onChange={(event) => updateEditField('phone', event.target.value)} />
-          </label>
-          <label className="field">
-            <span>状态</span>
-            <select value={editForm.status} onChange={(event) => updateEditField('status', Number(event.target.value))}>
-              <option value={1}>启用</option>
-              <option value={0}>停用</option>
-            </select>
-          </label>
-          <div className="field two-span">
-            <span>角色</span>
-            <div className="check-grid">
-              {roleOptions.map((role) => (
-                <label key={role.roleKey} className="check-item">
-                  <input
-                    type="checkbox"
-                    checked={editForm.roleKeys.includes(role.roleKey)}
-                    onChange={() => toggleRole(role.roleKey)}
-                  />
-                  <span>{role.roleName}</span>
-                </label>
-              ))}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="user-edit-nickname">昵称</Label>
+            <Input id="user-edit-nickname" value={editForm.nickname} onChange={(event) => updateEditField('nickname', event.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="user-edit-email">邮箱</Label>
+            <Input id="user-edit-email" value={editForm.email} onChange={(event) => updateEditField('email', event.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="user-edit-phone">手机</Label>
+            <Input id="user-edit-phone" value={editForm.phone} onChange={(event) => updateEditField('phone', event.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>状态</Label>
+            <Select value={String(editForm.status)} onValueChange={(value) => updateEditField('status', Number(value))}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">启用</SelectItem>
+                <SelectItem value="0">停用</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label>角色</Label>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {roleOptions.length ? (
+                roleOptions.map((role) => (
+                  <label
+                    key={role.roleKey}
+                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-blue-100 bg-slate-50/70 px-3 py-2 text-sm transition-colors hover:bg-blue-50/70"
+                  >
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-blue-200 accent-blue-600"
+                      checked={editForm.roleKeys.includes(role.roleKey)}
+                      onChange={() => toggleRole(role.roleKey)}
+                    />
+                    <span>{role.roleName}</span>
+                  </label>
+                ))
+              ) : (
+                <div className="rounded-lg border border-dashed px-3 py-6 text-center text-sm text-muted-foreground sm:col-span-2">
+                  暂无可选角色
+                </div>
+              )}
             </div>
           </div>
         </div>

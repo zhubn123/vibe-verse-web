@@ -8,12 +8,12 @@ interface PageHeaderProps {
 
 export default function PageHeader({ title, description, actions }: PageHeaderProps) {
   return (
-    <div className="page-header">
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <h1>{title}</h1>
-        {description ? <p>{description}</p> : null}
+        <h1 className="text-2xl font-semibold tracking-normal text-foreground">{title}</h1>
+        {description ? <p className="mt-1.5 text-sm text-muted-foreground">{description}</p> : null}
       </div>
-      {actions ? <div className="page-header-actions">{actions}</div> : null}
+      {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
     </div>
   )
 }

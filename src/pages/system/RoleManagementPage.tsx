@@ -1,5 +1,5 @@
-import { Plus, RefreshCw, Save, Search, Trash2, Pencil } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Pencil, Plus, RefreshCw, Save, Search, Trash2 } from 'lucide-react'
+import { useEffect, useState, type FormEvent } from 'react'
 import {
   createRoleApi,
   deleteRolesApi,
@@ -16,6 +16,26 @@ import Modal from '@/components/Modal'
 import PageHeader from '@/components/PageHeader'
 import Pagination from '@/components/Pagination'
 import StatusBadge from '@/components/StatusBadge'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table'
 import type { IdValue, PageResult } from '@/types/common'
 
 const emptyRoleForm: RoleSaveRequest = {
@@ -25,6 +45,8 @@ const emptyRoleForm: RoleSaveRequest = {
   remark: '',
   permissionKeys: []
 }
+
+const ALL_STATUS_VALUE = '__all_status__'
 
 export default function RoleManagementPage() {
   const [query, setQuery] = useState({ pageNo: 1, pageSize: 10, roleKey: '', roleName: '', status: '' as number | '' })
@@ -131,172 +153,242 @@ export default function RoleManagementPage() {
     }
   }
 
-  function submitSearch(event: React.FormEvent<HTMLFormElement>) {
+  function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const nextQuery = { ...query, pageNo: 1 }
     setQuery(nextQuery)
     void fetchRoles(nextQuery)
   }
 
+  function resetSearch() {
+    const nextQuery = { pageNo: 1, pageSize: 10, roleKey: '', roleName: '', status: '' as number | '' }
+    setQuery(nextQuery)
+    void fetchRoles(nextQuery)
+  }
+
   return (
-    <div className="page-stack">
+    <div className="space-y-5">
       <PageHeader
         title="角色权限"
         description="管理角色、权限码和后台系统访问范围。"
         actions={
-          <button className="btn primary" type="button" onClick={openCreate}>
-            <Plus size={18} />
+          <Button type="button" onClick={openCreate}>
+            <Plus />
             新建角色
-          </button>
+          </Button>
         }
       />
-      <form className="toolbar" onSubmit={submitSearch}>
-        <input
-          placeholder="角色编码"
-          value={query.roleKey}
-          onChange={(event) => setQuery((current) => ({ ...current, roleKey: event.target.value }))}
-        />
-        <input
-          placeholder="角色名称"
-          value={query.roleName}
-          onChange={(event) => setQuery((current) => ({ ...current, roleName: event.target.value }))}
-        />
-        <select
-          value={query.status}
-          onChange={(event) =>
-            setQuery((current) => ({ ...current, status: event.target.value === '' ? '' : Number(event.target.value), pageNo: 1 }))
-          }
-        >
-          <option value="">全部状态</option>
-          <option value={1}>启用</option>
-          <option value={0}>停用</option>
-        </select>
-        <button className="btn primary" type="submit">
-          <Search size={18} />
-          查询
-        </button>
-        <button
-          className="btn ghost"
-          type="button"
-          onClick={() => {
-            const nextQuery = { pageNo: 1, pageSize: 10, roleKey: '', roleName: '', status: '' as number | '' }
-            setQuery(nextQuery)
-            void fetchRoles(nextQuery)
-          }}
-        >
-          <RefreshCw size={18} />
-          重置
-        </button>
-      </form>
-      {error ? <div className="notice error">{error}</div> : null}
-      <section className="table-panel">
-        <div className="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>角色编码</th>
-                <th>角色名称</th>
-                <th>用户数</th>
-                <th>权限数</th>
-                <th>状态</th>
-                <th>备注</th>
-                <th className="actions-col">操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {page.records.map((role) => (
-                <tr key={String(role.id)}>
-                  <td>
-                    <strong>{role.roleKey}</strong>
-                    {role.builtIn ? <span className="mini-tag">内置</span> : null}
-                  </td>
-                  <td>{role.roleName}</td>
-                  <td>{role.userCount}</td>
-                  <td>{role.permissionCount}</td>
-                  <td>
-                    <StatusBadge status={role.status} />
-                  </td>
-                  <td>{role.remark || '-'}</td>
-                  <td>
-                    <div className="row-actions">
-                      <button className="icon-btn" type="button" title="编辑角色" disabled={!role.modifiable} onClick={() => openEdit(role)}>
-                        <Pencil size={17} />
-                      </button>
-                      <button className="icon-btn danger" type="button" title="删除角色" disabled={!role.deletable} onClick={() => deleteRole(role)}>
-                        <Trash2 size={17} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {!loading && page.records.length === 0 ? <EmptyState /> : null}
-          {loading ? <div className="table-loading">加载中...</div> : null}
-        </div>
+
+      <Card className="border-blue-100/80 bg-card/95 shadow-sm">
+        <CardContent className="p-4">
+          <form className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_180px_auto]" onSubmit={submitSearch}>
+            <div className="space-y-2">
+              <Label htmlFor="role-search-key">角色编码</Label>
+              <Input
+                id="role-search-key"
+                placeholder="请输入角色编码"
+                value={query.roleKey}
+                onChange={(event) => setQuery((current) => ({ ...current, roleKey: event.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="role-search-name">角色名称</Label>
+              <Input
+                id="role-search-name"
+                placeholder="请输入角色名称"
+                value={query.roleName}
+                onChange={(event) => setQuery((current) => ({ ...current, roleName: event.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>状态</Label>
+              <Select
+                value={query.status === '' ? ALL_STATUS_VALUE : String(query.status)}
+                onValueChange={(value) =>
+                  setQuery((current) => ({
+                    ...current,
+                    status: value === ALL_STATUS_VALUE ? '' : Number(value),
+                    pageNo: 1
+                  }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="全部状态" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL_STATUS_VALUE}>全部状态</SelectItem>
+                  <SelectItem value="1">启用</SelectItem>
+                  <SelectItem value="0">停用</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-end gap-2 md:col-span-2 xl:col-span-1">
+              <Button className="flex-1 xl:flex-none" type="submit">
+                <Search />
+                查询
+              </Button>
+              <Button className="flex-1 xl:flex-none" variant="outline" type="button" onClick={resetSearch}>
+                <RefreshCw />
+                重置
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      {error ? <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</div> : null}
+
+      <Card className="overflow-hidden border-blue-100/80 bg-card/95 shadow-sm">
+        <Table>
+          <TableHeader className="bg-slate-50/90">
+            <TableRow className="hover:bg-slate-50/90">
+              <TableHead className="min-w-44">角色编码</TableHead>
+              <TableHead>角色名称</TableHead>
+              <TableHead className="w-24">用户数</TableHead>
+              <TableHead className="w-24">权限数</TableHead>
+              <TableHead className="w-24">状态</TableHead>
+              <TableHead className="min-w-52">备注</TableHead>
+              <TableHead className="w-28 text-right">操作</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {page.records.map((role) => (
+              <TableRow key={String(role.id)}>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-foreground">{role.roleKey}</span>
+                    {role.builtIn ? <Badge variant="secondary">内置</Badge> : null}
+                  </div>
+                </TableCell>
+                <TableCell>{role.roleName}</TableCell>
+                <TableCell className="text-muted-foreground">{role.userCount}</TableCell>
+                <TableCell className="text-muted-foreground">{role.permissionCount}</TableCell>
+                <TableCell>
+                  <StatusBadge status={role.status} />
+                </TableCell>
+                <TableCell className="max-w-80 truncate text-muted-foreground">{role.remark || '-'}</TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      type="button"
+                      title="编辑角色"
+                      aria-label="编辑角色"
+                      disabled={!role.modifiable}
+                      onClick={() => openEdit(role)}
+                    >
+                      <Pencil />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      type="button"
+                      title="删除角色"
+                      aria-label="删除角色"
+                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      disabled={!role.deletable}
+                      onClick={() => deleteRole(role)}
+                    >
+                      <Trash2 />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        {!loading && page.records.length === 0 ? <EmptyState /> : null}
+        {loading ? <div className="border-t px-6 py-10 text-center text-sm text-muted-foreground">加载中...</div> : null}
         <Pagination
           pageNo={page.pageNo}
           pageSize={page.pageSize}
           total={page.total}
           onChange={(pageNo) => setQuery((current) => ({ ...current, pageNo }))}
         />
-      </section>
+      </Card>
+
       <Modal
         title={editingId ? '编辑角色' : '新建角色'}
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         footer={
           <>
-            <button className="btn ghost" type="button" onClick={() => setModalOpen(false)}>
+            <Button variant="outline" type="button" onClick={() => setModalOpen(false)}>
               取消
-            </button>
-            <button className="btn primary" type="button" disabled={saving || !form.roleKey || !form.roleName} onClick={saveRole}>
-              <Save size={18} />
-              保存
-            </button>
+            </Button>
+            <Button type="button" disabled={saving || !form.roleKey || !form.roleName} onClick={saveRole}>
+              <Save />
+              {saving ? '保存中...' : '保存'}
+            </Button>
           </>
         }
       >
-        <div className="form-grid two">
-          <label className="field">
-            <span>角色编码</span>
-            <input value={form.roleKey} disabled={!!editingId} onChange={(event) => updateForm('roleKey', event.target.value)} />
-          </label>
-          <label className="field">
-            <span>角色名称</span>
-            <input value={form.roleName} onChange={(event) => updateForm('roleName', event.target.value)} />
-          </label>
-          <label className="field">
-            <span>状态</span>
-            <select value={form.status} onChange={(event) => updateForm('status', Number(event.target.value))}>
-              <option value={1}>启用</option>
-              <option value={0}>停用</option>
-            </select>
-          </label>
-          <label className="field">
-            <span>备注</span>
-            <input value={form.remark || ''} onChange={(event) => updateForm('remark', event.target.value)} />
-          </label>
-          <div className="field two-span">
-            <span>权限</span>
-            <div className="permission-list">
-              {permissionGroups.map((group) => (
-                <section key={group.module} className="permission-group">
-                  <strong>{group.moduleName}</strong>
-                  <div className="check-grid">
-                    {group.permissions.map((permission) => (
-                      <label key={permission.permKey} className="check-item">
-                        <input
-                          type="checkbox"
-                          checked={form.permissionKeys.includes(permission.permKey)}
-                          onChange={() => togglePermission(permission.permKey)}
-                        />
-                        <span>{permission.permName}</span>
-                      </label>
-                    ))}
-                  </div>
-                </section>
-              ))}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="role-form-key">角色编码</Label>
+            <Input
+              id="role-form-key"
+              value={form.roleKey}
+              disabled={!!editingId}
+              onChange={(event) => updateForm('roleKey', event.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="role-form-name">角色名称</Label>
+            <Input id="role-form-name" value={form.roleName} onChange={(event) => updateForm('roleName', event.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>状态</Label>
+            <Select value={String(form.status)} onValueChange={(value) => updateForm('status', Number(value))}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">启用</SelectItem>
+                <SelectItem value="0">停用</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="role-form-remark">备注</Label>
+            <Input id="role-form-remark" value={form.remark || ''} onChange={(event) => updateForm('remark', event.target.value)} />
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label>权限</Label>
+            <div className="space-y-3">
+              {permissionGroups.length ? (
+                permissionGroups.map((group) => (
+                  <section key={group.module} className="rounded-lg border border-blue-100 bg-slate-50/70 p-3">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <div className="font-medium text-foreground">{group.moduleName}</div>
+                      <Badge variant="outline" className="bg-background text-muted-foreground">
+                        {group.permissions.length} 项
+                      </Badge>
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {group.permissions.map((permission) => (
+                        <label
+                          key={permission.permKey}
+                          className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-blue-50"
+                        >
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 rounded border-blue-200 accent-blue-600"
+                            checked={form.permissionKeys.includes(permission.permKey)}
+                            onChange={() => togglePermission(permission.permKey)}
+                          />
+                          <span>{permission.permName}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </section>
+                ))
+              ) : (
+                <div className="rounded-lg border border-dashed px-3 py-8 text-center text-sm text-muted-foreground">
+                  暂无权限目录
+                </div>
+              )}
             </div>
           </div>
         </div>

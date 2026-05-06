@@ -1,6 +1,10 @@
 import { Lock, LogIn, User } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { useAuth } from '@/context/AuthContext'
 
 export default function LoginPage() {
@@ -32,46 +36,64 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="auth-page">
-      <section className="auth-panel">
-        <div className="auth-brand">
-          <div className="brand-mark">V</div>
-          <div>
-            <strong>Vibe Verse</strong>
-            <span>System Console</span>
+    <main className="flex min-h-screen items-center justify-center bg-[linear-gradient(180deg,#fbfcff_0%,#f4f7fc_100%)] px-4 py-8">
+      <Card className="w-full max-w-[420px] border-border/80 bg-card/95 shadow-[var(--af-shadow)] backdrop-blur">
+        <CardHeader className="space-y-5 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-lg font-semibold text-primary-foreground shadow-sm">
+            V
           </div>
-        </div>
-        <h1>登录</h1>
-        <form className="form-grid" onSubmit={handleSubmit}>
-          <label className="field">
-            <span>用户名</span>
-            <div className="input-with-icon">
-              <User size={18} />
-              <input value={username} onChange={(event) => setUsername(event.target.value)} autoComplete="username" />
+          <div className="space-y-1">
+            <CardTitle className="text-xl">登录</CardTitle>
+            <CardDescription className="truncate">Vibe Verse System Console</CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <div className="space-y-2">
+              <Label htmlFor="username">用户名</Label>
+              <div className="relative">
+                <User className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="username"
+                  className="pl-9"
+                  value={username}
+                  onChange={(event) => setUsername(event.target.value)}
+                  autoComplete="username"
+                />
+              </div>
             </div>
-          </label>
-          <label className="field">
-            <span>密码</span>
-            <div className="input-with-icon">
-              <Lock size={18} />
-              <input
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                autoComplete="current-password"
-              />
+            <div className="space-y-2">
+              <Label htmlFor="password">密码</Label>
+              <div className="relative">
+                <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="password"
+                  className="pl-9"
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  autoComplete="current-password"
+                />
+              </div>
             </div>
-          </label>
-          {error ? <div className="form-error">{error}</div> : null}
-          <button className="btn primary full" type="submit" disabled={submitting || !username || !password}>
-            <LogIn size={18} />
-            {submitting ? '登录中' : '登录'}
-          </button>
-        </form>
-        <p className="auth-switch">
-          没有账号？<Link to="/register">注册</Link>
-        </p>
-      </section>
+            {error ? (
+              <div className="rounded-md border border-destructive/25 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {error}
+              </div>
+            ) : null}
+            <Button className="w-full" type="submit" disabled={submitting || !username || !password}>
+              <LogIn className="size-4" />
+              {submitting ? '登录中' : '登录'}
+            </Button>
+          </form>
+          <p className="mt-5 text-center text-sm text-muted-foreground">
+            没有账号？
+            <Link className="font-medium text-primary underline-offset-4 hover:underline" to="/register">
+              注册
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
     </main>
   )
 }
