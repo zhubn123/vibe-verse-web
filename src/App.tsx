@@ -5,9 +5,12 @@ import RegisterPage from './pages/auth/RegisterPage'
 import DashboardPage from './pages/dashboard/DashboardPage'
 import ProfilePage from './pages/profile/ProfilePage'
 import DictionaryManagementPage from './pages/system/DictionaryManagementPage'
+import AuditLogPage from './pages/system/AuditLogPage'
 import ForbiddenPage from './pages/system/ForbiddenPage'
 import NotFoundPage from './pages/system/NotFoundPage'
+import PermissionCatalogPage from './pages/system/PermissionCatalogPage'
 import RoleManagementPage from './pages/system/RoleManagementPage'
+import SystemConfigPage from './pages/system/SystemConfigPage'
 import UserManagementPage from './pages/system/UserManagementPage'
 import GuestRoute from './router/GuestRoute'
 import ProtectedRoute from './router/ProtectedRoute'
@@ -63,6 +66,30 @@ export default function App() {
           element={
             <ProtectedRoute permissions={['system:dict:view']}>
               <DictionaryManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/system/audit-logs"
+          element={
+            <ProtectedRoute permissions={['system:audit:view']}>
+              <AuditLogPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/system/permissions"
+          element={
+            <ProtectedRoute permissions={['system:permission:view']}>
+              <PermissionCatalogPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/system/configs"
+          element={
+            <ProtectedRoute permissions={['system:config:view']}>
+              <SystemConfigPage />
             </ProtectedRoute>
           }
         />

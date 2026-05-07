@@ -1,9 +1,12 @@
 import {
   BookOpen,
   ChevronRight,
+  ClipboardList,
+  FolderKey,
   Home,
   LogOut,
   Menu,
+  Settings,
   ShieldCheck,
   User,
   Users
@@ -28,6 +31,9 @@ const navItems = [
   { to: '/system/users', label: '用户管理', icon: Users, permission: 'system:user:view' },
   { to: '/system/roles', label: '角色权限', icon: ShieldCheck, permission: 'system:role:view' },
   { to: '/system/dictionaries', label: '字典管理', icon: BookOpen, permission: 'system:dict:view' },
+  { to: '/system/audit-logs', label: '审计日志', icon: ClipboardList, permission: 'system:audit:view' },
+  { to: '/system/permissions', label: '权限目录', icon: FolderKey, permission: 'system:permission:view' },
+  { to: '/system/configs', label: '系统参数', icon: Settings, permission: 'system:config:view' },
   { to: '/profile', label: '个人资料', icon: User }
 ]
 

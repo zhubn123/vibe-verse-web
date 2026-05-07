@@ -1,4 +1,4 @@
-import { BookOpen, ChevronRight, KeyRound, ShieldCheck, User, Users } from 'lucide-react'
+import { BookOpen, ChevronRight, ClipboardList, FolderKey, KeyRound, Settings, ShieldCheck, User, Users } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import PageHeader from '@/components/PageHeader'
 import { Badge } from '@/components/ui/badge'
@@ -8,7 +8,10 @@ import { useAuth } from '@/context/AuthContext'
 const adminActions = [
   { title: '用户管理', description: '维护账号资料、状态和角色', to: '/system/users', icon: Users, permission: 'system:user:view' },
   { title: '角色权限', description: '管理角色与权限范围', to: '/system/roles', icon: ShieldCheck, permission: 'system:role:view' },
-  { title: '字典管理', description: '维护系统字典和选项', to: '/system/dictionaries', icon: BookOpen, permission: 'system:dict:view' }
+  { title: '字典管理', description: '维护系统字典和选项', to: '/system/dictionaries', icon: BookOpen, permission: 'system:dict:view' },
+  { title: '审计日志', description: '查询系统操作和登录审计', to: '/system/audit-logs', icon: ClipboardList, permission: 'system:audit:view' },
+  { title: '权限目录', description: '查看权限分组和权限项', to: '/system/permissions', icon: FolderKey, permission: 'system:permission:view' },
+  { title: '系统参数', description: '维护平台配置项', to: '/system/configs', icon: Settings, permission: 'system:config:view' }
 ]
 
 export default function DashboardPage() {
