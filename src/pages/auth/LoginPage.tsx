@@ -1,11 +1,12 @@
 import { Lock, LogIn, User } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/context/AuthContext'
+import { consumeManualLogout } from '@/utils/storage'
 
 const defaultUsername = import.meta.env.VITE_LOGIN_DEFAULT_USERNAME ?? 'admin'
 const defaultPassword = import.meta.env.VITE_LOGIN_DEFAULT_PASSWORD ?? '123456'
@@ -19,9 +20,11 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  const redirect = useMemo(() => {
+  useEffect(() => {
     const params = new URLSearchParams(location.search)
-    return params.get('redirect') || '/dashboard'
+    if (params.get('reason') === 'logout') {
+      consumeManualLogout()
+    }
   }, [location.search])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -30,7 +33,7 @@ export default function LoginPage() {
     setSubmitting(true)
     try {
       await auth.login({ username, password })
-      navigate(redirect, { replace: true })
+      navigate('/dashboard', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : '登录失败')
     } finally {

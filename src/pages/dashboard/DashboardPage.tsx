@@ -1,22 +1,14 @@
-import { BookOpen, ChevronRight, ClipboardList, FolderKey, KeyRound, Settings, ShieldCheck, User, Users } from 'lucide-react'
+import { ChevronRight, KeyRound, User } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import PageHeader from '@/components/PageHeader'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/context/AuthContext'
-
-const adminActions = [
-  { title: '用户管理', description: '维护账号资料、状态和角色', to: '/system/users', icon: Users, permission: 'system:user:view' },
-  { title: '角色权限', description: '管理角色与权限范围', to: '/system/roles', icon: ShieldCheck, permission: 'system:role:view' },
-  { title: '字典管理', description: '维护系统字典和选项', to: '/system/dictionaries', icon: BookOpen, permission: 'system:dict:view' },
-  { title: '审计日志', description: '查询系统操作和登录审计', to: '/system/audit-logs', icon: ClipboardList, permission: 'system:audit:view' },
-  { title: '权限目录', description: '查看权限分组和权限项', to: '/system/permissions', icon: FolderKey, permission: 'system:permission:view' },
-  { title: '系统参数', description: '维护平台配置项', to: '/system/configs', icon: Settings, permission: 'system:config:view' }
-]
+import { flattenMenus, resolveMenuIcon } from '@/utils/menu'
 
 export default function DashboardPage() {
   const auth = useAuth()
-  const visibleAdminActions = adminActions.filter((action) => auth.hasPermission(action.permission))
+  const visibleAdminActions = flattenMenus(auth.menuItems).filter((item) => item.path && item.path.startsWith('/system/'))
   const canAccessSystem = visibleAdminActions.length > 0
   const displayName = auth.userInfo?.nickname || auth.userInfo?.username || '-'
   const roleText = auth.roles.length ? auth.roles.join(', ') : '-'
@@ -89,11 +81,11 @@ export default function DashboardPage() {
 
             {visibleAdminActions.length
               ? visibleAdminActions.map((action) => {
-                  const Icon = action.icon
+                  const Icon = resolveMenuIcon(action.icon)
                   return (
                     <Link
-                      key={action.to}
-                      to={action.to}
+                      key={action.menuKey}
+                      to={action.path || '/dashboard'}
                       className="group flex items-center justify-between rounded-lg border border-border bg-background/70 p-4 transition-colors hover:border-primary/40 hover:bg-accent"
                     >
                       <span className="flex items-center gap-3">
@@ -102,7 +94,7 @@ export default function DashboardPage() {
                         </span>
                         <span>
                           <span className="block text-sm font-medium text-foreground">{action.title}</span>
-                          <span className="mt-1 block text-xs text-muted-foreground">{action.description}</span>
+                          <span className="mt-1 block text-xs text-muted-foreground">由后端菜单和权限控制</span>
                         </span>
                       </span>
                       <ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />

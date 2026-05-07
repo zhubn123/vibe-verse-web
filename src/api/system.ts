@@ -7,6 +7,18 @@ function buildIdsQuery(ids: IdValue[]): string {
   return query.toString()
 }
 
+export interface MenuItem {
+  id: IdValue
+  parentId: IdValue
+  menuKey: string
+  title: string
+  path?: string
+  icon?: string
+  permissionKey?: string
+  sortOrder?: number
+  children?: MenuItem[]
+}
+
 export interface AuditLogQuery {
   pageNo: number
   pageSize: number
@@ -101,5 +113,12 @@ export async function deleteSystemConfigsApi(ids: IdValue[]): Promise<void> {
   await requestApi<void>({
     url: `/system-configs?${buildIdsQuery(ids)}`,
     method: 'delete'
+  })
+}
+
+export function listCurrentMenusApi(): Promise<MenuItem[]> {
+  return requestApi<MenuItem[]>({
+    url: '/menus/current',
+    method: 'get'
   })
 }

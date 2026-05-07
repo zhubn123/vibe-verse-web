@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom'
-import { getAccessToken } from '@/utils/storage'
+import { consumeManualLogout, getAccessToken } from '@/utils/storage'
 import { useAuth } from '@/context/AuthContext'
 import type { ReactNode } from 'react'
 
@@ -16,6 +16,9 @@ export default function ProtectedRoute({ children, roles = [], permissions = [] 
 
   if (!auth.isLoggedIn || !hasLocalToken) {
     auth.forceLogout()
+    if (consumeManualLogout()) {
+      return <Navigate to="/login?reason=logout" replace />
+    }
     const params = new URLSearchParams({
       reason: 'auth-required',
       redirect: `${location.pathname}${location.search}`

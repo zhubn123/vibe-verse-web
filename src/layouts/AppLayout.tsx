@@ -1,18 +1,11 @@
 import {
-  BookOpen,
   ChevronRight,
-  ClipboardList,
-  FolderKey,
-  Home,
   LogOut,
-  Menu,
-  Settings,
-  ShieldCheck,
-  User,
-  Users
+  Menu
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import type { MenuItem } from '@/api/system'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -25,36 +18,73 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { useAuth } from '@/context/AuthContext'
 import { cn } from '@/lib/utils'
-
-const navItems = [
-  { to: '/dashboard', label: '工作台', icon: Home },
-  { to: '/system/users', label: '用户管理', icon: Users, permission: 'system:user:view' },
-  { to: '/system/roles', label: '角色权限', icon: ShieldCheck, permission: 'system:role:view' },
-  { to: '/system/dictionaries', label: '字典管理', icon: BookOpen, permission: 'system:dict:view' },
-  { to: '/system/audit-logs', label: '审计日志', icon: ClipboardList, permission: 'system:audit:view' },
-  { to: '/system/permissions', label: '权限目录', icon: FolderKey, permission: 'system:permission:view' },
-  { to: '/system/configs', label: '系统参数', icon: Settings, permission: 'system:config:view' },
-  { to: '/profile', label: '个人资料', icon: User }
-]
+import { findMenuByPath, resolveMenuIcon } from '@/utils/menu'
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [menuLoading, setMenuLoading] = useState(false)
+  const [menuError, setMenuError] = useState('')
   const auth = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
-  const visibleNavItems = useMemo(
-    () => navItems.filter((item) => !item.permission || auth.hasPermission(item.permission)),
-    [auth]
-  )
+  useEffect(() => {
+    if (!auth.isLoggedIn || auth.menuItems.length > 0 || menuLoading) {
+      return
+    }
+    setMenuLoading(true)
+    setMenuError('')
+    void auth.reloadMenus()
+      .catch((error) => setMenuError(error instanceof Error ? error.message : '菜单加载失败'))
+      .finally(() => setMenuLoading(false))
+  }, [auth, menuLoading])
 
   async function handleLogout() {
     await auth.logout()
-    navigate('/login', { replace: true })
+    navigate('/login?reason=logout', { replace: true })
   }
 
-  const currentTitle = navItems.find((item) => location.pathname === item.to)?.label || '平台管理'
+  const currentTitle = useMemo(
+    () => findMenuByPath(auth.menuItems, location.pathname)?.title || '平台管理',
+    [auth.menuItems, location.pathname]
+  )
   const displayName = auth.userInfo?.nickname || auth.userInfo?.username || '未命名用户'
+
+  function renderMenuItem(item: MenuItem, depth = 0) {
+    const Icon = resolveMenuIcon(item.icon)
+    const children = item.children || []
+    if (!item.path) {
+      return (
+        <div key={item.menuKey} className={cn(depth > 0 && 'pl-4')}>
+          <div className="flex h-8 items-center gap-2 px-3 text-xs font-medium text-muted-foreground">
+            <Icon className="size-4 shrink-0" />
+            <span className="min-w-0 flex-1 truncate">{item.title}</span>
+          </div>
+          <div className="space-y-1">{children.map((child) => renderMenuItem(child, depth + 1))}</div>
+        </div>
+      )
+    }
+
+    return (
+      <div key={item.menuKey} className={cn(depth > 0 && 'pl-4')}>
+        <NavLink
+          to={item.path}
+          className={({ isActive }) =>
+            cn(
+              'group flex h-10 items-center gap-3 rounded-md px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground',
+              isActive && 'bg-primary/10 text-primary shadow-[inset_3px_0_0_var(--af-brand)]'
+            )
+          }
+          onClick={() => setSidebarOpen(false)}
+        >
+          <Icon className="size-4 shrink-0" />
+          <span className="min-w-0 flex-1 truncate">{item.title}</span>
+          <ChevronRight className="size-4 shrink-0 opacity-0 transition-opacity group-hover:opacity-70" />
+        </NavLink>
+        {children.length ? <div className="mt-1 space-y-1">{children.map((child) => renderMenuItem(child, depth + 1))}</div> : null}
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#fbfcff_0%,#f4f7fc_100%)] text-foreground">
@@ -75,26 +105,9 @@ export default function AppLayout() {
         </div>
         <Separator />
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4" aria-label="主导航">
-          {visibleNavItems.map((item) => {
-            const Icon = item.icon
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  cn(
-                    'group flex h-10 items-center gap-3 rounded-md px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground',
-                    isActive && 'bg-primary/10 text-primary shadow-[inset_3px_0_0_var(--af-brand)]'
-                  )
-                }
-                onClick={() => setSidebarOpen(false)}
-              >
-                <Icon className="size-4 shrink-0" />
-                <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                <ChevronRight className="size-4 shrink-0 opacity-0 transition-opacity group-hover:opacity-70" />
-              </NavLink>
-            )
-          })}
+          {auth.menuItems.map((item) => renderMenuItem(item))}
+          {menuLoading ? <div className="px-3 py-2 text-sm text-muted-foreground">菜单加载中...</div> : null}
+          {menuError ? <div className="mx-3 rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2 text-xs text-destructive">{menuError}</div> : null}
         </nav>
         <div className="border-t px-5 py-4">
           <div className="truncate text-xs text-muted-foreground">当前账号</div>
