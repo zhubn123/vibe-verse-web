@@ -7,12 +7,15 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/context/AuthContext'
 
+const defaultUsername = import.meta.env.VITE_LOGIN_DEFAULT_USERNAME ?? 'admin'
+const defaultPassword = import.meta.env.VITE_LOGIN_DEFAULT_PASSWORD ?? '123456'
+
 export default function LoginPage() {
   const auth = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
+  const [username, setUsername] = useState(defaultUsername)
+  const [password, setPassword] = useState(defaultPassword)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
