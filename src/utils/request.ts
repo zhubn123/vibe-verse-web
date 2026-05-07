@@ -35,6 +35,7 @@ interface RefreshTokenPayload {
     phone?: string
   }
   roles?: string[]
+  permissionKeys?: string[]
 }
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || '/api'
@@ -135,7 +136,8 @@ function saveRefreshedAuthState(payload: RefreshTokenPayload): string | null {
       email: payload.userInfo.email,
       phone: payload.userInfo.phone
     },
-    payload.roles || []
+    payload.roles || [],
+    payload.permissionKeys || []
   )
   return nextToken
 }

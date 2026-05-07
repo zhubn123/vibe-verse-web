@@ -45,7 +45,7 @@ export default function App() {
         <Route
           path="/system/users"
           element={
-            <ProtectedRoute roles={['admin']}>
+            <ProtectedRoute permissions={['system:user:view']}>
               <UserManagementPage />
             </ProtectedRoute>
           }
@@ -53,7 +53,7 @@ export default function App() {
         <Route
           path="/system/roles"
           element={
-            <ProtectedRoute roles={['admin']}>
+            <ProtectedRoute permissions={['system:role:view']}>
               <RoleManagementPage />
             </ProtectedRoute>
           }
@@ -61,7 +61,7 @@ export default function App() {
         <Route
           path="/system/dictionaries"
           element={
-            <ProtectedRoute roles={['admin']}>
+            <ProtectedRoute permissions={['system:dict:view']}>
               <DictionaryManagementPage />
             </ProtectedRoute>
           }

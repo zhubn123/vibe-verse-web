@@ -2,6 +2,7 @@ const TOKEN_KEY = 'token'
 const REFRESH_TOKEN_KEY = 'refresh_token'
 const USER_INFO_KEY = 'user_info'
 const ROLES_KEY = 'roles'
+const PERMISSION_KEYS_KEY = 'permission_keys'
 
 export interface StoredUserInfo {
   id: string
@@ -19,7 +20,13 @@ export function getRefreshToken(): string {
   return localStorage.getItem(REFRESH_TOKEN_KEY) || ''
 }
 
-export function saveAuthState(token: string, refreshToken: string | undefined, userInfo: StoredUserInfo, roles: string[]) {
+export function saveAuthState(
+  token: string,
+  refreshToken: string | undefined,
+  userInfo: StoredUserInfo,
+  roles: string[],
+  permissionKeys: string[]
+) {
   localStorage.setItem(TOKEN_KEY, token)
   if (refreshToken) {
     localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
@@ -28,6 +35,7 @@ export function saveAuthState(token: string, refreshToken: string | undefined, u
   }
   localStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfo))
   localStorage.setItem(ROLES_KEY, JSON.stringify(roles))
+  localStorage.setItem(PERMISSION_KEYS_KEY, JSON.stringify(permissionKeys))
 }
 
 export function clearAuthState() {
@@ -35,6 +43,7 @@ export function clearAuthState() {
   localStorage.removeItem(REFRESH_TOKEN_KEY)
   localStorage.removeItem(USER_INFO_KEY)
   localStorage.removeItem(ROLES_KEY)
+  localStorage.removeItem(PERMISSION_KEYS_KEY)
 }
 
 export function readStoredUserInfo(): StoredUserInfo | null {
@@ -51,7 +60,15 @@ export function readStoredUserInfo(): StoredUserInfo | null {
 }
 
 export function readStoredRoles(): string[] {
-  const raw = localStorage.getItem(ROLES_KEY)
+  return readStringArray(ROLES_KEY)
+}
+
+export function readStoredPermissionKeys(): string[] {
+  return readStringArray(PERMISSION_KEYS_KEY)
+}
+
+function readStringArray(key: string): string[] {
+  const raw = localStorage.getItem(key)
   if (!raw) {
     return []
   }
@@ -59,7 +76,7 @@ export function readStoredRoles(): string[] {
     const parsed = JSON.parse(raw) as unknown
     return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : []
   } catch {
-    localStorage.removeItem(ROLES_KEY)
+    localStorage.removeItem(key)
     return []
   }
 }

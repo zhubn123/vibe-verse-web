@@ -26,6 +26,7 @@ export interface LoginResponse {
   refreshToken?: string
   userInfo: UserInfo
   roles: string[]
+  permissionKeys: string[]
 }
 
 export async function loginApi(data: LoginRequest): Promise<LoginResponse> {
@@ -40,6 +41,7 @@ export async function loginApi(data: LoginRequest): Promise<LoginResponse> {
       phone?: string
     }
     roles?: string[]
+    permissionKeys?: string[]
   }>({
     url: '/auth/login',
     method: 'post',
@@ -57,7 +59,8 @@ export async function loginApi(data: LoginRequest): Promise<LoginResponse> {
       email: result.userInfo.email,
       phone: result.userInfo.phone
     },
-    roles: result.roles || []
+    roles: result.roles || [],
+    permissionKeys: result.permissionKeys || []
   }
 }
 

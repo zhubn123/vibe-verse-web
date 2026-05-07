@@ -4,6 +4,7 @@ import {
   clearAuthState,
   getAccessToken,
   getRefreshToken,
+  readStoredPermissionKeys,
   readStoredRoles,
   readStoredUserInfo,
   saveAuthState
@@ -14,12 +15,14 @@ interface AuthContextValue {
   refreshToken: string
   userInfo: UserInfo | null
   roles: string[]
+  permissionKeys: string[]
   isLoggedIn: boolean
   login: (data: LoginRequest) => Promise<void>
   logout: () => Promise<void>
   forceLogout: () => void
   setUserInfo: (info: UserInfo) => void
   hasRole: (roleKey: string) => boolean
+  hasPermission: (permissionKey: string) => boolean
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -29,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [refreshToken, setRefreshToken] = useState(getRefreshToken())
   const [userInfo, setUserInfoState] = useState<UserInfo | null>(readStoredUserInfo())
   const [roles, setRoles] = useState<string[]>(readStoredRoles())
+  const [permissionKeys, setPermissionKeys] = useState<string[]>(readStoredPermissionKeys())
 
   async function login(data: LoginRequest) {
     const response = await loginApi(data)
@@ -36,7 +40,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRefreshToken(response.refreshToken || '')
     setUserInfoState(response.userInfo)
     setRoles(response.roles)
-    saveAuthState(response.token, response.refreshToken, response.userInfo, response.roles)
+    setPermissionKeys(response.permissionKeys)
+    saveAuthState(response.token, response.refreshToken, response.userInfo, response.roles, response.permissionKeys)
   }
 
   async function logout() {
@@ -53,12 +58,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRefreshToken('')
     setUserInfoState(null)
     setRoles([])
+    setPermissionKeys([])
     clearAuthState()
   }
 
   function setUserInfo(info: UserInfo) {
     setUserInfoState(info)
-    saveAuthState(token, refreshToken || undefined, info, roles)
+    saveAuthState(token, refreshToken || undefined, info, roles, permissionKeys)
   }
 
   const value = useMemo<AuthContextValue>(
@@ -67,14 +73,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshToken,
       userInfo,
       roles,
+      permissionKeys,
       isLoggedIn: !!token,
       login,
       logout,
       forceLogout,
       setUserInfo,
-      hasRole: (roleKey: string) => roles.includes(roleKey)
+      hasRole: (roleKey: string) => roles.includes(roleKey),
+      hasPermission: (permissionKey: string) => permissionKeys.includes(permissionKey)
     }),
-    [refreshToken, roles, token, userInfo]
+    [permissionKeys, refreshToken, roles, token, userInfo]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

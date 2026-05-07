@@ -6,14 +6,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/context/AuthContext'
 
 const adminActions = [
-  { title: '用户管理', description: '维护账号资料、状态和角色', to: '/system/users', icon: Users },
-  { title: '角色权限', description: '管理角色与权限范围', to: '/system/roles', icon: ShieldCheck },
-  { title: '字典管理', description: '维护系统字典和选项', to: '/system/dictionaries', icon: BookOpen }
+  { title: '用户管理', description: '维护账号资料、状态和角色', to: '/system/users', icon: Users, permission: 'system:user:view' },
+  { title: '角色权限', description: '管理角色与权限范围', to: '/system/roles', icon: ShieldCheck, permission: 'system:role:view' },
+  { title: '字典管理', description: '维护系统字典和选项', to: '/system/dictionaries', icon: BookOpen, permission: 'system:dict:view' }
 ]
 
 export default function DashboardPage() {
   const auth = useAuth()
-  const isAdmin = auth.hasRole('admin')
+  const visibleAdminActions = adminActions.filter((action) => auth.hasPermission(action.permission))
+  const canAccessSystem = visibleAdminActions.length > 0
   const displayName = auth.userInfo?.nickname || auth.userInfo?.username || '-'
   const roleText = auth.roles.length ? auth.roles.join(', ') : '-'
 
@@ -51,10 +52,10 @@ export default function DashboardPage() {
         <Card className="border-blue-100 bg-white/90 shadow-[var(--af-shadow-soft)]">
           <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
             <CardDescription>系统管理</CardDescription>
-            <Badge variant={isAdmin ? 'success' : 'muted'}>{isAdmin ? '可访问' : '未授权'}</Badge>
+            <Badge variant={canAccessSystem ? 'success' : 'muted'}>{canAccessSystem ? '可访问' : '未授权'}</Badge>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold text-foreground">{isAdmin ? '已开启' : '受限'}</div>
+            <div className="text-2xl font-semibold text-foreground">{canAccessSystem ? '已开启' : '受限'}</div>
             <p className="mt-2 text-sm text-muted-foreground">管理员可维护用户、角色和字典</p>
           </CardContent>
         </Card>
@@ -83,8 +84,8 @@ export default function DashboardPage() {
               <ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
             </Link>
 
-            {isAdmin
-              ? adminActions.map((action) => {
+            {visibleAdminActions.length
+              ? visibleAdminActions.map((action) => {
                   const Icon = action.icon
                   return (
                     <Link

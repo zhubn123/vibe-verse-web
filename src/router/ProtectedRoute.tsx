@@ -6,9 +6,10 @@ import type { ReactNode } from 'react'
 interface ProtectedRouteProps {
   children: ReactNode
   roles?: string[]
+  permissions?: string[]
 }
 
-export default function ProtectedRoute({ children, roles = [] }: ProtectedRouteProps) {
+export default function ProtectedRoute({ children, roles = [], permissions = [] }: ProtectedRouteProps) {
   const auth = useAuth()
   const location = useLocation()
   const hasLocalToken = !!getAccessToken()
@@ -23,6 +24,15 @@ export default function ProtectedRoute({ children, roles = [] }: ProtectedRouteP
   }
 
   if (roles.length > 0 && !roles.some((roleKey) => auth.hasRole(roleKey))) {
+    const params = new URLSearchParams({
+      reason: 'forbidden',
+      redirect: `${location.pathname}${location.search}`,
+      message: '当前账号没有访问该页面的权限'
+    })
+    return <Navigate to={`/403?${params.toString()}`} replace />
+  }
+
+  if (permissions.length > 0 && !permissions.some((permissionKey) => auth.hasPermission(permissionKey))) {
     const params = new URLSearchParams({
       reason: 'forbidden',
       redirect: `${location.pathname}${location.search}`,

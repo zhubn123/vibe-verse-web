@@ -25,9 +25,9 @@ import { cn } from '@/lib/utils'
 
 const navItems = [
   { to: '/dashboard', label: '工作台', icon: Home },
-  { to: '/system/users', label: '用户管理', icon: Users, roles: ['admin'] },
-  { to: '/system/roles', label: '角色权限', icon: ShieldCheck, roles: ['admin'] },
-  { to: '/system/dictionaries', label: '字典管理', icon: BookOpen, roles: ['admin'] },
+  { to: '/system/users', label: '用户管理', icon: Users, permission: 'system:user:view' },
+  { to: '/system/roles', label: '角色权限', icon: ShieldCheck, permission: 'system:role:view' },
+  { to: '/system/dictionaries', label: '字典管理', icon: BookOpen, permission: 'system:dict:view' },
   { to: '/profile', label: '个人资料', icon: User }
 ]
 
@@ -38,7 +38,7 @@ export default function AppLayout() {
   const location = useLocation()
 
   const visibleNavItems = useMemo(
-    () => navItems.filter((item) => !item.roles || item.roles.some((roleKey) => auth.hasRole(roleKey))),
+    () => navItems.filter((item) => !item.permission || auth.hasPermission(item.permission)),
     [auth]
   )
 
