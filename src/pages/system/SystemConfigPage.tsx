@@ -52,12 +52,12 @@ const emptyForm: SystemConfigSaveRequest = {
   configName: '',
   configValue: '',
   valueType: 'text',
-  status: 0,
+  status: 1,
   remark: ''
 }
 
 function ConfigStatusBadge({ status }: { status: number | undefined }) {
-  const enabled = Number(status) === 0
+  const enabled = Number(status) === 1
   return <Badge variant={enabled ? 'success' : 'muted'}>{enabled ? '正常' : '停用'}</Badge>
 }
 
@@ -220,8 +220,8 @@ export default function SystemConfigPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={ALL_STATUS_VALUE}>全部状态</SelectItem>
-                  <SelectItem value="0">正常</SelectItem>
-                  <SelectItem value="1">停用</SelectItem>
+                  <SelectItem value="1">正常</SelectItem>
+                  <SelectItem value="0">停用</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -356,8 +356,8 @@ export default function SystemConfigPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="0">正常</SelectItem>
-                <SelectItem value="1">停用</SelectItem>
+                <SelectItem value="1">正常</SelectItem>
+                <SelectItem value="0">停用</SelectItem>
               </SelectContent>
             </Select>
           </div>

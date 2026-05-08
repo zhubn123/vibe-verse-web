@@ -119,7 +119,7 @@ export default function PermissionCatalogPage() {
                       </div>
                       <div className="mt-2 font-mono text-xs text-muted-foreground">{permission.permKey}</div>
                     </div>
-                    <Badge variant={permission.status === 0 ? 'success' : 'muted'}>{permission.status === 0 ? '正常' : '停用'}</Badge>
+                    <Badge variant={permission.status === 1 ? 'success' : 'muted'}>{permission.status === 1 ? '正常' : '停用'}</Badge>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <Badge variant="outline" className="bg-slate-50 text-muted-foreground">
