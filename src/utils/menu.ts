@@ -2,10 +2,12 @@ import {
   BookOpen,
   CircleDot,
   ClipboardList,
+  FileUp,
   FolderKey,
   Home,
   Settings,
   ShieldCheck,
+  ToolCase,
   User,
   Users,
   type LucideIcon
@@ -15,10 +17,12 @@ import type { MenuItem } from '@/api/system'
 const menuIconMap: Record<string, LucideIcon> = {
   BookOpen,
   ClipboardList,
+  FileUp,
   FolderKey,
   Home,
   Settings,
   ShieldCheck,
+  ToolCase,
   User,
   Users
 }

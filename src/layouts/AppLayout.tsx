@@ -1,4 +1,5 @@
 import {
+  ChevronDown,
   ChevronRight,
   LogOut,
   Menu
@@ -22,6 +23,7 @@ import { findMenuByPath, resolveMenuIcon } from '@/utils/menu'
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [expandedMenuKeys, setExpandedMenuKeys] = useState<Set<string>>(new Set())
   const [menuLoading, setMenuLoading] = useState(false)
   const [menuError, setMenuError] = useState('')
   const auth = useAuth()
@@ -50,17 +52,58 @@ export default function AppLayout() {
   )
   const displayName = auth.userInfo?.nickname || auth.userInfo?.username || '未命名用户'
 
+  useEffect(() => {
+    const activeGroupKeys = collectActiveGroupKeys(auth.menuItems, location.pathname)
+    if (!activeGroupKeys.length) {
+      return
+    }
+    setExpandedMenuKeys((current) => {
+      const next = new Set(current)
+      let changed = false
+      activeGroupKeys.forEach((key) => {
+        if (!next.has(key)) {
+          next.add(key)
+          changed = true
+        }
+      })
+      return changed ? next : current
+    })
+  }, [auth.menuItems, location.pathname])
+
+  function toggleMenuGroup(menuKey: string) {
+    setExpandedMenuKeys((current) => {
+      const next = new Set(current)
+      if (next.has(menuKey)) {
+        next.delete(menuKey)
+      } else {
+        next.add(menuKey)
+      }
+      return next
+    })
+  }
+
   function renderMenuItem(item: MenuItem, depth = 0) {
     const Icon = resolveMenuIcon(item.icon)
     const children = item.children || []
     if (!item.path) {
+      const expanded = expandedMenuKeys.has(item.menuKey)
+      const activeChild = menuContainsPath(children, location.pathname)
       return (
         <div key={item.menuKey} className={cn(depth > 0 && 'pl-4')}>
-          <div className="flex h-8 items-center gap-2 px-3 text-xs font-medium text-muted-foreground">
+          <button
+            type="button"
+            className={cn(
+              'group flex h-10 w-full items-center gap-3 rounded-md px-3 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground',
+              activeChild && 'bg-primary/5 text-primary'
+            )}
+            aria-expanded={expanded}
+            onClick={() => toggleMenuGroup(item.menuKey)}
+          >
             <Icon className="size-4 shrink-0" />
             <span className="min-w-0 flex-1 truncate">{item.title}</span>
-          </div>
-          <div className="space-y-1">{children.map((child) => renderMenuItem(child, depth + 1))}</div>
+            {expanded ? <ChevronDown className="size-4 shrink-0" /> : <ChevronRight className="size-4 shrink-0" />}
+          </button>
+          {expanded ? <div className="mt-1 space-y-1">{children.map((child) => renderMenuItem(child, depth + 1))}</div> : null}
         </div>
       )
     }
@@ -164,4 +207,23 @@ export default function AppLayout() {
       ) : null}
     </div>
   )
+}
+
+function collectActiveGroupKeys(items: MenuItem[], pathname: string, parents: string[] = []): string[] {
+  for (const item of items) {
+    const children = item.children || []
+    if (item.path === pathname) {
+      return parents
+    }
+    const nextParents = item.path ? parents : [...parents, item.menuKey]
+    const childResult = collectActiveGroupKeys(children, pathname, nextParents)
+    if (childResult.length) {
+      return childResult
+    }
+  }
+  return []
+}
+
+function menuContainsPath(items: MenuItem[], pathname: string): boolean {
+  return items.some((item) => item.path === pathname || menuContainsPath(item.children || [], pathname))
 }

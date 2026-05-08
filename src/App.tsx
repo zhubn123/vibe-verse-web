@@ -6,6 +6,7 @@ import DashboardPage from './pages/dashboard/DashboardPage'
 import ProfilePage from './pages/profile/ProfilePage'
 import DictionaryManagementPage from './pages/system/DictionaryManagementPage'
 import AuditLogPage from './pages/system/AuditLogPage'
+import FileManagementPage from './pages/system/FileManagementPage'
 import ForbiddenPage from './pages/system/ForbiddenPage'
 import MenuManagementPage from './pages/system/MenuManagementPage'
 import NotFoundPage from './pages/system/NotFoundPage'
@@ -99,6 +100,14 @@ export default function App() {
           element={
             <ProtectedRoute permissions={['system:config:view']}>
               <SystemConfigPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/system/files"
+          element={
+            <ProtectedRoute permissions={['system:oss:view']}>
+              <FileManagementPage />
             </ProtectedRoute>
           }
         />

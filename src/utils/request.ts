@@ -13,7 +13,7 @@ export interface ApiResult<T = unknown> {
   data: T
 }
 
-interface AuthRequestConfig extends AxiosRequestConfig {
+export interface AuthRequestConfig extends AxiosRequestConfig {
   _retry?: boolean
   skipAuthRefresh?: boolean
 }
@@ -224,4 +224,8 @@ export async function requestApi<T>(config: AuthRequestConfig): Promise<T> {
     throw new Error(result.message || '请求失败')
   }
   return result.data
+}
+
+export async function requestRaw<T = unknown>(config: AuthRequestConfig): Promise<AxiosResponse<T>> {
+  return request.request<T>(config)
 }
