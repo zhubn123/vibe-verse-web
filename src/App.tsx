@@ -7,6 +7,7 @@ import ProfilePage from './pages/profile/ProfilePage'
 import DictionaryManagementPage from './pages/system/DictionaryManagementPage'
 import AuditLogPage from './pages/system/AuditLogPage'
 import ForbiddenPage from './pages/system/ForbiddenPage'
+import MenuManagementPage from './pages/system/MenuManagementPage'
 import NotFoundPage from './pages/system/NotFoundPage'
 import PermissionCatalogPage from './pages/system/PermissionCatalogPage'
 import RoleManagementPage from './pages/system/RoleManagementPage'
@@ -66,6 +67,14 @@ export default function App() {
           element={
             <ProtectedRoute permissions={['system:dict:view']}>
               <DictionaryManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/system/menus"
+          element={
+            <ProtectedRoute permissions={['system:menu:view']}>
+              <MenuManagementPage />
             </ProtectedRoute>
           }
         />

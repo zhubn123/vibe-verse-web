@@ -19,6 +19,34 @@ export interface MenuItem {
   children?: MenuItem[]
 }
 
+export interface MenuManageRecord {
+  id: IdValue
+  parentId: IdValue
+  menuKey: string
+  title: string
+  path?: string
+  icon?: string
+  permissionKey?: string
+  sortOrder: number
+  visible: number
+  status: number
+  remark?: string
+  children?: MenuManageRecord[]
+}
+
+export interface MenuSaveRequest {
+  parentId: number
+  menuKey: string
+  title: string
+  path?: string
+  icon?: string
+  permissionKey?: string
+  sortOrder: number
+  visible: number
+  status: number
+  remark?: string
+}
+
 export interface AuditLogQuery {
   pageNo: number
   pageSize: number
@@ -120,5 +148,42 @@ export function listCurrentMenusApi(): Promise<MenuItem[]> {
   return requestApi<MenuItem[]>({
     url: '/menus/current',
     method: 'get'
+  })
+}
+
+export function listMenuTreeApi(): Promise<MenuManageRecord[]> {
+  return requestApi<MenuManageRecord[]>({
+    url: '/menus',
+    method: 'get'
+  })
+}
+
+export function getMenuDetailApi(id: IdValue): Promise<MenuManageRecord> {
+  return requestApi<MenuManageRecord>({
+    url: `/menus/${id}`,
+    method: 'get'
+  })
+}
+
+export async function createMenuApi(data: MenuSaveRequest): Promise<void> {
+  await requestApi<void>({
+    url: '/menus',
+    method: 'post',
+    data
+  })
+}
+
+export async function updateMenuApi(id: IdValue, data: MenuSaveRequest): Promise<void> {
+  await requestApi<void>({
+    url: `/menus/${id}`,
+    method: 'put',
+    data
+  })
+}
+
+export async function deleteMenusApi(ids: IdValue[]): Promise<void> {
+  await requestApi<void>({
+    url: `/menus?${buildIdsQuery(ids)}`,
+    method: 'delete'
   })
 }
