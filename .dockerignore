@@ -1,0 +1,14 @@
+node_modules/
+dist/
+dist-ssr/
+.vite/
+.git/
+.github/
+.idea/
+.vscode/
+coverage/
+logs/
+*.log
+.env
+.env.*
+!.env.example
