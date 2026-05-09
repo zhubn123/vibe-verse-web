@@ -1,4 +1,4 @@
-import { Pencil, RefreshCw, Save, Search } from 'lucide-react'
+import { FileDown, FileUp, Pencil, RefreshCw, Save, Search } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { queryRoleOptionsApi, type RoleOption } from '@/api/role'
 import {
@@ -8,6 +8,7 @@ import {
   type ManagedUserUpdateRequest,
   type UserManagementQuery
 } from '@/api/user'
+import DataExchangeDialog from '@/components/DataExchangeDialog'
 import EmptyState from '@/components/EmptyState'
 import Modal from '@/components/Modal'
 import PageHeader from '@/components/PageHeader'
@@ -33,6 +34,7 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
+import { useAuth } from '@/context/AuthContext'
 import type { PageResult } from '@/types/common'
 
 interface UserEditForm extends ManagedUserUpdateRequest {}
@@ -50,14 +52,19 @@ const ALL_ROLES_VALUE = '__all_roles__'
 const ALL_STATUS_VALUE = '__all_status__'
 
 export default function UserManagementPage() {
+  const auth = useAuth()
+  const canManage = auth.hasPermission('system:user:manage')
   const [query, setQuery] = useState<UserManagementQuery>(defaultQuery)
   const [page, setPage] = useState<PageResult<ManagedUser>>({ pageNo: 1, pageSize: 10, total: 0, pages: 0, records: [] })
   const [roleOptions, setRoleOptions] = useState<RoleOption[]>([])
   const [selectedUser, setSelectedUser] = useState<ManagedUser | null>(null)
   const [editForm, setEditForm] = useState<UserEditForm>({ nickname: '', email: '', phone: '', status: 1, roleKeys: [] })
+  const [importDialogOpen, setImportDialogOpen] = useState(false)
+  const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
 
   useEffect(() => {
     queryRoleOptionsApi().then(setRoleOptions).catch(() => setRoleOptions([]))
@@ -142,7 +149,24 @@ export default function UserManagementPage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="用户管理" description="维护系统用户的基础资料、状态和角色归属。" />
+      <PageHeader
+        title="用户管理"
+        description="维护系统用户的基础资料、状态和角色归属。"
+        actions={
+          <div className="flex flex-wrap gap-2">
+            {canManage ? (
+              <Button variant="outline" type="button" onClick={() => setImportDialogOpen(true)}>
+                <FileUp />
+                导入
+              </Button>
+            ) : null}
+            <Button type="button" onClick={() => setExportDialogOpen(true)}>
+              <FileDown />
+              导出
+            </Button>
+          </div>
+        }
+      />
 
       <Card className="border-blue-100/80 bg-card/95 shadow-sm">
         <CardContent className="p-4">
@@ -222,6 +246,7 @@ export default function UserManagementPage() {
         </CardContent>
       </Card>
 
+      {notice ? <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{notice}</div> : null}
       {error ? <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</div> : null}
 
       <Card className="overflow-hidden border-blue-100/80 bg-card/95 shadow-sm">
@@ -288,6 +313,34 @@ export default function UserManagementPage() {
           onChange={(pageNo) => setQuery((current) => ({ ...current, pageNo }))}
         />
       </Card>
+
+      <DataExchangeDialog
+        scene="system-user-import"
+        title="导入用户"
+        mode="import"
+        open={importDialogOpen}
+        onClose={() => setImportDialogOpen(false)}
+        onSuccess={(task) => {
+          setNotice(`用户导入完成：成功 ${task.successCount || 0} 条，失败 ${task.failCount || 0} 条`)
+          void fetchUsers()
+        }}
+        hint="先下载模板，按 username、nickname、email、phone、password、roleKeys、status 填写。多个角色用 | 分隔。"
+      />
+
+      <DataExchangeDialog
+        scene="system-user-export"
+        title="导出用户"
+        mode="export"
+        open={exportDialogOpen}
+        onClose={() => setExportDialogOpen(false)}
+        queryParams={{
+          username: query.username || undefined,
+          nickname: query.nickname || undefined,
+          roleKey: query.roleKey || undefined,
+          status: query.status === '' ? undefined : query.status
+        }}
+        onSuccess={() => setNotice('用户导出已生成，文件已开始下载')}
+      />
 
       <Modal
         title={selectedUser ? `编辑用户：${selectedUser.username}` : '编辑用户'}

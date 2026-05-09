@@ -35,9 +35,11 @@ import {
   TableRow
 } from '@/components/ui/table'
 import { useAuth } from '@/context/AuthContext'
+import { useAppConfig } from '@/context/AppConfigContext'
 import type { IdValue, PageResult } from '@/types/common'
 
 const ALL_STATUS_VALUE = '__all_status__'
+const PLATFORM_NAME_CONFIG_KEY = 'platform.name'
 
 const defaultQuery: SystemConfigQuery = {
   pageNo: 1,
@@ -63,6 +65,7 @@ function ConfigStatusBadge({ status }: { status: number | undefined }) {
 
 export default function SystemConfigPage() {
   const auth = useAuth()
+  const { reloadAppConfig } = useAppConfig()
   const canManage = auth.hasPermission('system:config:manage')
   const [query, setQuery] = useState<SystemConfigQuery>(defaultQuery)
   const [page, setPage] = useState<PageResult<SystemConfigRecord>>({ pageNo: 1, pageSize: 10, total: 0, pages: 0, records: [] })
@@ -127,6 +130,7 @@ export default function SystemConfigPage() {
   async function saveConfig() {
     setSaving(true)
     setError('')
+    const shouldReloadAppConfig = form.configKey.trim().toLowerCase() === PLATFORM_NAME_CONFIG_KEY
     try {
       if (editingId) {
         await updateSystemConfigApi(editingId, form)
@@ -135,6 +139,9 @@ export default function SystemConfigPage() {
       }
       setModalOpen(false)
       await fetchConfigs()
+      if (shouldReloadAppConfig) {
+        await reloadAppConfig()
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '保存系统参数失败')
     } finally {
@@ -150,6 +157,9 @@ export default function SystemConfigPage() {
     try {
       await deleteSystemConfigsApi([config.id])
       await fetchConfigs()
+      if (config.configKey === PLATFORM_NAME_CONFIG_KEY) {
+        await reloadAppConfig()
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '删除系统参数失败')
     }

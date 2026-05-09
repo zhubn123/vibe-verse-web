@@ -49,6 +49,7 @@ let refreshPromise: Promise<string | null> | null = null
 function isPublicAuthRequest(config?: AxiosRequestConfig): boolean {
   const url = config?.url || ''
   return (
+    url.includes('/app-config') ||
     url.includes('/auth/login') ||
     url.includes('/auth/register') ||
     url.includes('/auth/logout') ||

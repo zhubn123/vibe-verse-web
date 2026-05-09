@@ -98,6 +98,18 @@ export interface SystemConfigSaveRequest {
   remark?: string
 }
 
+export interface AppConfig {
+  platformName: string
+}
+
+export function getAppConfigApi(): Promise<AppConfig> {
+  return requestApi<AppConfig>({
+    url: '/app-config',
+    method: 'get',
+    skipAuthRefresh: true
+  })
+}
+
 export function queryAuditLogPage(params: AuditLogQuery): Promise<PageResult<AuditLogRecord>> {
   return requestApi<PageResult<AuditLogRecord>>({
     url: '/audit-logs',

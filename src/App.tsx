@@ -4,8 +4,10 @@ import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
 import DashboardPage from './pages/dashboard/DashboardPage'
 import ProfilePage from './pages/profile/ProfilePage'
+import ReminderPage from './pages/ReminderPage'
 import DictionaryManagementPage from './pages/system/DictionaryManagementPage'
 import AuditLogPage from './pages/system/AuditLogPage'
+import DataExchangeTaskPage from './pages/system/DataExchangeTaskPage'
 import FileManagementPage from './pages/system/FileManagementPage'
 import ForbiddenPage from './pages/system/ForbiddenPage'
 import MenuManagementPage from './pages/system/MenuManagementPage'
@@ -46,6 +48,7 @@ export default function App() {
       >
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/reminders" element={<ReminderPage />} />
         <Route path="/403" element={<ForbiddenPage />} />
         <Route
           path="/system/users"
@@ -108,6 +111,14 @@ export default function App() {
           element={
             <ProtectedRoute permissions={['system:oss:view']}>
               <FileManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/system/exchange-tasks"
+          element={
+            <ProtectedRoute permissions={['system:exchange:view']}>
+              <DataExchangeTaskPage />
             </ProtectedRoute>
           }
         />

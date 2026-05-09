@@ -1,4 +1,6 @@
 import {
+  ArrowDownUp,
+  Bell,
   BookOpen,
   CircleDot,
   ClipboardList,
@@ -15,6 +17,8 @@ import {
 import type { MenuItem } from '@/api/system'
 
 const menuIconMap: Record<string, LucideIcon> = {
+  ArrowDownUp,
+  Bell,
   BookOpen,
   ClipboardList,
   FileUp,

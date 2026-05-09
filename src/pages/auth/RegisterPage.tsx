@@ -1,14 +1,16 @@
 import { UserPlus } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { registerApi } from '@/api/auth'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useAppConfig } from '@/context/AppConfigContext'
 
 export default function RegisterPage() {
   const navigate = useNavigate()
+  const { platformName, platformInitial } = useAppConfig()
   const [form, setForm] = useState({
     username: '',
     password: '',
@@ -18,6 +20,10 @@ export default function RegisterPage() {
   })
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    document.title = `注册账号 - ${platformName}`
+  }, [platformName])
 
   function updateField(field: keyof typeof form, value: string) {
     setForm((current) => ({ ...current, [field]: value }))
@@ -42,11 +48,11 @@ export default function RegisterPage() {
       <Card className="w-full max-w-[620px] border-border/80 bg-card/95 shadow-[var(--af-shadow)] backdrop-blur">
         <CardHeader className="space-y-5 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-lg font-semibold text-primary-foreground shadow-sm">
-            V
+            {platformInitial}
           </div>
           <div className="space-y-1">
             <CardTitle className="text-xl">注册账号</CardTitle>
-            <CardDescription className="truncate">Vibe Verse System Console</CardDescription>
+            <CardDescription className="truncate">{platformName} System Console</CardDescription>
           </div>
         </CardHeader>
         <CardContent>

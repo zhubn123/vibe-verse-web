@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { Separator } from '@/components/ui/separator'
+import { useAppConfig } from '@/context/AppConfigContext'
 import { useAuth } from '@/context/AuthContext'
 import { cn } from '@/lib/utils'
 import { findMenuByPath, resolveMenuIcon } from '@/utils/menu'
@@ -26,6 +27,7 @@ export default function AppLayout() {
   const [expandedMenuKeys, setExpandedMenuKeys] = useState<Set<string>>(new Set())
   const [menuLoading, setMenuLoading] = useState(false)
   const [menuError, setMenuError] = useState('')
+  const { platformName, platformInitial } = useAppConfig()
   const auth = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -51,6 +53,10 @@ export default function AppLayout() {
     [auth.menuItems, location.pathname]
   )
   const displayName = auth.userInfo?.nickname || auth.userInfo?.username || '未命名用户'
+
+  useEffect(() => {
+    document.title = `${currentTitle} - ${platformName}`
+  }, [currentTitle, platformName])
 
   useEffect(() => {
     const activeGroupKeys = collectActiveGroupKeys(auth.menuItems, location.pathname)
@@ -139,10 +145,10 @@ export default function AppLayout() {
       >
         <div className="flex h-16 items-center gap-3 px-5">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-base font-semibold text-primary-foreground shadow-sm">
-            V
+            {platformInitial}
           </div>
           <div className="min-w-0">
-            <strong className="block truncate text-sm font-semibold text-card-foreground">Vibe Verse</strong>
+            <strong className="block truncate text-sm font-semibold text-card-foreground">{platformName}</strong>
             <span className="block truncate text-xs text-muted-foreground">System Console</span>
           </div>
         </div>
@@ -172,7 +178,7 @@ export default function AppLayout() {
           </Button>
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-semibold text-foreground">{currentTitle}</div>
-            <div className="truncate text-xs text-muted-foreground">Vibe Verse 管理后台</div>
+            <div className="truncate text-xs text-muted-foreground">{platformName} 管理后台</div>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

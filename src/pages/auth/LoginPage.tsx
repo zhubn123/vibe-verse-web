@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useAppConfig } from '@/context/AppConfigContext'
 import { useAuth } from '@/context/AuthContext'
 import { consumeManualLogout } from '@/utils/storage'
 
@@ -13,6 +14,7 @@ const defaultPassword = import.meta.env.VITE_LOGIN_DEFAULT_PASSWORD ?? '123456'
 
 export default function LoginPage() {
   const auth = useAuth()
+  const { platformName, platformInitial } = useAppConfig()
   const navigate = useNavigate()
   const location = useLocation()
   const [username, setUsername] = useState(defaultUsername)
@@ -26,6 +28,10 @@ export default function LoginPage() {
       consumeManualLogout()
     }
   }, [location.search])
+
+  useEffect(() => {
+    document.title = `登录 - ${platformName}`
+  }, [platformName])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -46,11 +52,11 @@ export default function LoginPage() {
       <Card className="w-full max-w-[420px] border-border/80 bg-card/95 shadow-[var(--af-shadow)] backdrop-blur">
         <CardHeader className="space-y-5 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-lg font-semibold text-primary-foreground shadow-sm">
-            V
+            {platformInitial}
           </div>
           <div className="space-y-1">
             <CardTitle className="text-xl">登录</CardTitle>
-            <CardDescription className="truncate">Vibe Verse System Console</CardDescription>
+            <CardDescription className="truncate">{platformName} System Console</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
